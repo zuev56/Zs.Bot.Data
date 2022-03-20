@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Zs.Bot.Data.Enums;
 
-namespace Zs.Bot.Data.Enums
+public enum Role
 {
-    public enum Role
-    {
-        User,
-        Moderator,
-        Admin,
-        Owner
-    }
+    User,
+    Moderator,
+    Admin,
+    Owner
 }

@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using Zs.Bot.Data.Abstractions;
+using Zs.Common.Abstractions.Data;
 
-namespace Zs.Bot.Data.Models
+namespace Zs.Bot.Data.Models;
+
+public class MessageType : IDbEntity<MessageType, string>
 {
-    public class MessageType : IDbEntity<MessageType, string>
-    {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public Func<MessageType> GetItemForSave => () => this;
-        public Func<MessageType, MessageType> GetItemForUpdate => (existingItem) => this;
-        public ICollection<Message> Messages { get; set; }
-    }
-
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public Func<MessageType> GetItemForSave => () => this;
+    public Func<MessageType, MessageType> GetItemForUpdate => (existingItem) => this;
+    public ICollection<Message> Messages { get; set; }
 }
+
