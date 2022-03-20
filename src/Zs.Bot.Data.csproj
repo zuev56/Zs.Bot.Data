@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
 	  <PackageId>Zs.Bot.Data</PackageId>
-	  <Version>6.0.2</Version>
+	  <Version>6.0.3</Version>
 	  <Authors>zuev56 (Sergei Zuev)</Authors>
 	  <Company>zuev56 (Sergei Zuev)</Company>
 	  <RepositoryUrl>https://github.com/zuev56/Zs.Bot.Data</RepositoryUrl>
@@ -18,6 +18,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
     <PackageReference Include="Zs.Common" Version="6.0.2" />
+    <PackageReference Include="Zs.Common.Data" Version="6.0.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Zs.Common.Abstractions.Data;
+using Zs.Common.Data.Abstractions;
 using Zs.Common.Extensions;
 
 namespace Zs.Bot.Data.Models;

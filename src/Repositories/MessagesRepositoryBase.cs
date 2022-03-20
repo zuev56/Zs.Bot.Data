@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Zs.Bot.Data.Abstractions;
 using Zs.Bot.Data.Models;
-using Zs.Common.Abstractions.Data;
+using Zs.Common.Data.Abstractions;
+using Zs.Common.Data.Repositories;
 
 namespace Zs.Bot.Data.Repositories;
 
