@@ -5,15 +5,13 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Zs.Bot.Data.Abstractions;
 using Zs.Bot.Data.Models;
-using Zs.Common.Data.Abstractions;
-using Zs.Common.Data.Repositories;
 
 namespace Zs.Bot.Data.Repositories;
 
 public abstract class MessagesRepositoryBase<TContext> : ItemsWithRawDataRepository<TContext, Message, int>, IMessagesRepository
     where TContext : DbContext
 {
-    public MessagesRepositoryBase(
+    protected MessagesRepositoryBase(
         IDbContextFactory<TContext> contextFactory,
         TimeSpan? criticalQueryExecutionTimeForLogging = null,
         ILogger<MessagesRepositoryBase<TContext>> logger = null)

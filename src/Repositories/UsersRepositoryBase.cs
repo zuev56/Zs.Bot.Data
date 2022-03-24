@@ -7,14 +7,13 @@ using Microsoft.Extensions.Logging;
 using Zs.Bot.Data.Abstractions;
 using Zs.Bot.Data.Enums;
 using Zs.Bot.Data.Models;
-using Zs.Common.Data.Repositories;
 
 namespace Zs.Bot.Data.Repositories;
 
 public abstract class UsersRepositoryBase<TContext> : ItemsWithRawDataRepository<TContext, User, int>, IUsersRepository
     where TContext : DbContext
 {
-    public UsersRepositoryBase(
+    protected UsersRepositoryBase(
         IDbContextFactory<TContext> contextFactory,
         TimeSpan? criticalQueryExecutionTimeForLogging = null,
         ILogger<UsersRepositoryBase<TContext>> logger = null)

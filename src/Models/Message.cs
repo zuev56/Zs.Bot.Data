@@ -1,5 +1,5 @@
 ﻿using System;
-using Zs.Common.Data.Abstractions;
+using Zs.Bot.Data.Abstractions;
 
 namespace Zs.Bot.Data.Models;
 
