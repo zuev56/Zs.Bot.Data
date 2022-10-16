@@ -8,16 +8,16 @@ namespace Zs.Bot.Data.Models;
 public class User : IDbEntityWithRawData<User, int>
 {
     public int Id { get; set; }
-    public string Name { get; set; }
-    public string FullName { get; set; }
-    public string UserRoleId { get; set; }
+    public string? Name { get; set; }
+    public string? FullName { get; set; }
+    public string UserRoleId { get; set; } = null!;
     public bool IsBot { get; set; }
-    public string RawData { get; set; }
-    public string RawDataHash { get; set; }
-    public string RawDataHistory { get; set; }
+    public string RawData { get; set; } = null!;
+    public string RawDataHash { get; set; } = null!;
+    public string? RawDataHistory { get; set; }
     public DateTime UpdateDate { get; set; }
     public DateTime InsertDate { get; set; }
-    public ICollection<Message> Messages { get; set; }
+    public ICollection<Message> Messages { get; set; } = null!;
     public Enums.Role UserRole => GetUserRole();
 
     public Func<User> GetItemForSave => () => this;
@@ -47,12 +47,12 @@ public class User : IDbEntityWithRawData<User, int>
         return Enums.Role.User;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return Equals(obj as User);
     }
 
-    public bool Equals(User other)
+    public bool Equals(User? other)
     {
         return other != null &&
                Id == other.Id &&

@@ -14,12 +14,12 @@ public abstract class MessagesRepositoryBase<TContext> : ItemsWithRawDataReposit
     protected MessagesRepositoryBase(
         IDbContextFactory<TContext> contextFactory,
         TimeSpan? criticalQueryExecutionTimeForLogging = null,
-        ILogger<MessagesRepositoryBase<TContext>> logger = null)
+        ILogger<MessagesRepositoryBase<TContext>>? logger = null)
         : base(contextFactory, criticalQueryExecutionTimeForLogging, logger)
     {
     }
 
-    public abstract Task<Message> FindByRawDataIdsAsync(int rawMessageId, long rawChatId);
+    public abstract Task<Message?> FindByRawDataIdsAsync(int rawMessageId, long rawChatId);
 
     public abstract Task<List<Message>> FindDailyMessages(int chatId);
 
@@ -32,11 +32,14 @@ public abstract class MessagesRepositoryBase<TContext> : ItemsWithRawDataReposit
               && m.InsertDate > fromDate
               && m.InsertDate < toDate
               && !m.IsDeleted
-              && (m.UserId == botUserId || (m.Text.Trim().IndexOf("/") == 0 && m.Text.Contains(botName)))).ConfigureAwait(false);
+              && (m.UserId == botUserId || (m.Text != null && m.Text.Trim().IndexOf("/") == 0 && m.Text.Contains(botName)))).ConfigureAwait(false);
     }
 
     public async Task<List<Message>> FindAllTodaysMessagesWithTextAsync(string searchText)
     {
-        return await FindAllAsync(m => m.InsertDate > DateTime.UtcNow.Date && m.Text.Contains(searchText)).ConfigureAwait(false);
+        return await FindAllAsync(m => m.InsertDate > DateTime.UtcNow.Date
+                                    && m.Text != null
+                                    && m.Text.Contains(searchText))
+            .ConfigureAwait(false);
     }
 }

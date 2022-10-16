@@ -5,5 +5,5 @@ namespace Zs.Bot.Data.Abstractions;
 
 public interface ICommandsRepository : IRepository<Command, string>
 {
-    Task<Command> FindWhereIdLikeValueAsync(string value);
+    Task<Command?> FindWhereIdLikeValueAsync(string value);
 }

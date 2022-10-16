@@ -7,25 +7,25 @@ public class Message : IDbEntityWithRawData<Message, int>
 {
     public int Id { get; set; }
     public int? ReplyToMessageId { get; set; }
-    public string MessengerId { get; set; }
-    public string MessageTypeId { get; set; }
+    public string MessengerId { get; set; } = null!;
+    public string MessageTypeId { get; set; } = null!;
     public int UserId { get; set; }
     public int ChatId { get; set; }
-    public string Text { get; set; }
-    public string RawData { get; set; }
-    public string RawDataHash { get; set; }
-    public string RawDataHistory { get; set; }
+    public string? Text { get; set; }
+    public string RawData { get; set; } = null!;
+    public string RawDataHash { get; set; } = null!;
+    public string? RawDataHistory { get; set; }
     public bool IsSucceed { get; set; }
     public int FailsCount { get; set; }
-    public string FailDescription { get; set; }
+    public string? FailDescription { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime UpdateDate { get; set; }
     public DateTime InsertDate { get; set; }
-    public MessageType MessageType { get; set; }
-    public Message ReplyToMessage { get; set; }
-    public MessengerInfo Messenger { get; set; }
-    public User User { get; set; }
-    public Chat Chat { get; set; }
+    public MessageType MessageType { get; set; } = null!;
+    public Message ReplyToMessage { get; set; } = null!;
+    public MessengerInfo Messenger { get; set; } = null!;
+    public User User { get; set; } = null!;
+    public Chat Chat { get; set; } = null!;
 
     public Func<Message> GetItemForSave => () =>
         new Message
@@ -69,12 +69,12 @@ public class Message : IDbEntityWithRawData<Message, int>
             InsertDate = existingItem.InsertDate,
         };
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return Equals(obj as Message);
     }
 
-    public bool Equals(Message other)
+    public bool Equals(Message? other)
     {
         return other != null &&
                Id == other.Id &&

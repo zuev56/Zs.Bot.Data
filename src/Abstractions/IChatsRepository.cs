@@ -5,5 +5,5 @@ namespace Zs.Bot.Data.Abstractions;
 
 public interface IChatsRepository : IItemsWithRawDataRepository<Chat, int>
 {
-    Task<Chat> FindByRawDataIdAsync(long rawId);
+    Task<Chat?> FindByRawDataIdAsync(long rawId);
 }

@@ -5,7 +5,7 @@ namespace Zs.Bot.Data.Factories;
 
 public static class EntityFactory
 {
-    public static Message NewMessage(string messageText = null, int chatId = default, int userId = default)
+    public static Message NewMessage(string? messageText = null, int chatId = default, int userId = default)
     {
         return new Message
         {

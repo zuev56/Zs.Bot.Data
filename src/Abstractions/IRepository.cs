@@ -7,9 +7,10 @@ namespace Zs.Bot.Data.Abstractions;
 /// <summary>  </summary>
 /// <typeparam name="TEntity">Search entity type</typeparam>
 public interface IRepository<TEntity, TKey>
+    where TKey : notnull
     where TEntity : class, IDbEntity<TEntity, TKey>
 {
-    Task<TEntity> FindByIdAsync(TKey id, CancellationToken cancellationToken = default);
+    Task<TEntity?> FindByIdAsync(TKey id, CancellationToken cancellationToken = default);
 
     /// <summary>Returns the list of elements</summary>
     Task<List<TEntity>> FindAllAsync(int? skip = null, int? take = null, CancellationToken cancellationToken = default);

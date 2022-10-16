@@ -16,13 +16,13 @@ public abstract class UsersRepositoryBase<TContext> : ItemsWithRawDataRepository
     protected UsersRepositoryBase(
         IDbContextFactory<TContext> contextFactory,
         TimeSpan? criticalQueryExecutionTimeForLogging = null,
-        ILogger<UsersRepositoryBase<TContext>> logger = null)
+        ILogger<UsersRepositoryBase<TContext>>? logger = null)
         : base(contextFactory, criticalQueryExecutionTimeForLogging, logger)
     {
     }
 
     // Implementation depends on concrete database
-    public abstract Task<User> FindByRawDataIdAsync(long rawId);
+    public abstract Task<User?> FindByRawDataIdAsync(long rawId);
 
     public async Task<List<User>> FindByRoleIdsAsync(IEnumerable<Role> userRoles)
     {

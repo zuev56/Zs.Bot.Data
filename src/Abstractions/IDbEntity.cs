@@ -5,6 +5,7 @@ namespace Zs.Bot.Data.Abstractions;
 /// <summary>Database entity</summary>
 /// <typeparam name="TKey">Primary key type</typeparam>
 public interface IDbEntity<TEntity, TKey>
+    where TKey: notnull
 {
     TKey Id { get; set; }
 

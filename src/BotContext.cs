@@ -6,14 +6,14 @@ namespace Zs.Bot.Data;
 public abstract class BotContext<TContext> : DbContext
     where TContext : DbContext
 {
-    public DbSet<ChatType> ChatTypes { get; set; }
-    public DbSet<Chat> Chats { get; set; }
-    public DbSet<Command> Commands { get; set; }
-    public DbSet<MessageType> MessageTypes { get; set; }
-    public DbSet<Message> Messages { get; set; }
-    public DbSet<MessengerInfo> Messengers { get; set; }
-    public DbSet<UserRole> UserRoles { get; set; }
-    public DbSet<User> Users { get; set; }
+    public DbSet<ChatType> ChatTypes { get; set; } = null!;
+    public DbSet<Chat> Chats { get; set; } = null!;
+    public DbSet<Command> Commands { get; set; } = null!;
+    public DbSet<MessageType> MessageTypes { get; set; } = null!;
+    public DbSet<Message> Messages { get; set; } = null!;
+    public DbSet<MessengerInfo> Messengers { get; set; } = null!;
+    public DbSet<UserRole> UserRoles { get; set; } = null!;
+    public DbSet<User> Users { get; set; } = null!;
 
     protected BotContext()
     {

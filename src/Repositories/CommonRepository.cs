@@ -19,46 +19,48 @@ namespace Zs.Bot.Data.Repositories;
 /// <typeparam name="TId">Primary key type</typeparam>
 /// <typeparam name="TContext">DB Context</typeparam>
 public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEntity, TId>
+    where TId : notnull
     where TEntity : class, IDbEntity<TEntity, TId>
     where TContext : DbContext
 {
     private readonly TimeSpan _criticalQueryExecutionTime;
-    private readonly ILogger<CommonRepository<TContext, TEntity, TId>> _logger;
+    private readonly ILogger<CommonRepository<TContext, TEntity, TId>>? _logger;
 
     protected IDbContextFactory<TContext> ContextFactory { get; }
 
-    // TODO: Log query time
-    // TODO: Return IOperationResult on save or delete
+    // TODO: Return Result on save or delete
 
     // TODO: Make specific delegate type
     /// <summary> Calls before items update. 
     /// First argument - saving item, second argument - existing item from database </summary>
-    protected Action<TEntity, TEntity> BeforeUpdateItem { get; set; }
+    protected Action<TEntity, TEntity> BeforeUpdateItem { get; set; } = null!;
 
 
     public CommonRepository(
         IDbContextFactory<TContext> contextFactory,
         TimeSpan? criticalQueryExecutionTimeForLogging = null,
-        ILogger<CommonRepository<TContext, TEntity, TId>> logger = null)
+        ILogger<CommonRepository<TContext, TEntity, TId>>? logger = null)
     {
         ContextFactory = contextFactory ?? throw new NullReferenceException(nameof(contextFactory));
         _criticalQueryExecutionTime = criticalQueryExecutionTimeForLogging ?? TimeSpan.FromSeconds(1);
         _logger = logger;
     }
 
-    protected async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null, CancellationToken cancellationToken = default)
+    protected async Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default)
     {
         await using (var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false))
         {
-            return await context.Set<TEntity>().CountAsync(predicate, cancellationToken).ConfigureAwait(false);
+            return predicate != null
+                ? await context.Set<TEntity>().CountAsync(predicate, cancellationToken).ConfigureAwait(false)
+                : await context.Set<TEntity>().CountAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
-    public virtual async Task<TEntity> FindByIdAsync(TId id, CancellationToken cancellationToken = default)
+    public virtual async Task<TEntity?> FindByIdAsync(TId id, CancellationToken cancellationToken = default)
     {
         var sw = new Stopwatch();
         sw.Start();
-        string resultQuery = null;
+        string? resultQuery = null;
 
         try
         {
@@ -78,11 +80,11 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
         }
     }
 
-    protected virtual async Task<TEntity> FindBySqlAsync(string sql, CancellationToken cancellationToken = default)
+    protected virtual async Task<TEntity?> FindBySqlAsync(string sql, CancellationToken cancellationToken = default)
     {
         var sw = new Stopwatch();
         sw.Start();
-        string resultQuery = null;
+        string? resultQuery = null;
 
         try
         {
@@ -110,14 +112,14 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
     /// <param name="orderBy"> Sorting rules before executing predicate</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    protected virtual async Task<TEntity> FindAsync(
-        Expression<Func<TEntity, bool>> predicate = null,
-        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
+    protected virtual async Task<TEntity?> FindAsync(
+        Expression<Func<TEntity, bool>>? predicate = null,
+        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
         CancellationToken cancellationToken = default)
     {
         var sw = new Stopwatch();
         sw.Start();
-        string resultQuery = null;
+        string? resultQuery = null;
 
         try
         {
@@ -157,15 +159,15 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     protected virtual async Task<List<TEntity>> FindAllAsync(
-        Expression<Func<TEntity, bool>> predicate = null,
-        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
+        Expression<Func<TEntity, bool>>? predicate = null,
+        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
         int? skip = null,
         int? take = null,
         CancellationToken cancellationToken = default)
     {
         var sw = new Stopwatch();
         sw.Start();
-        string resultQuery = null;
+        string? resultQuery = null;
 
         try
         {
@@ -206,7 +208,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
     {
         var sw = new Stopwatch();
         sw.Start();
-        string resultQuery = null;
+        string? resultQuery = null;
 
         try
         {
@@ -233,8 +235,8 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
         var sw = new Stopwatch();
         sw.Start();
-        string resultChanges = null;
-        string detailedResultChanges = null;
+        string? resultChanges = null;
+        string? detailedResultChanges = null;
 
         try
         {
@@ -269,8 +271,8 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
         var sw = new Stopwatch();
         sw.Start();
-        string resultChanges = null;
-        string detailedResultChanges = null;
+        string? resultChanges = null;
+        string? detailedResultChanges = null;
 
         try
         {
@@ -349,7 +351,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
         var sw = new Stopwatch();
         sw.Start();
-        string resultChanges = null;
+        string? resultChanges = null;
 
         try
         {
@@ -382,7 +384,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
         var sw = new Stopwatch();
         sw.Start();
-        string resultChanges = null;
+        string? resultChanges = null;
 
         try
         {
@@ -408,7 +410,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
         }
     }
 
-    protected void LogFind(string message, TimeSpan elapsed, string sql)
+    protected void LogFind(string message, TimeSpan elapsed, string? sql)
     {
         if (elapsed > _criticalQueryExecutionTime)
             _logger?.LogWarning(message, elapsed, sql);
@@ -416,7 +418,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
             _logger?.LogDebug(message, elapsed, sql);
     }
 
-    private void LogSave(string message, TimeSpan elapsed, string changes, string detailedChanges)
+    private void LogSave(string message, TimeSpan elapsed, string? changes, string? detailedChanges)
     {
         if (elapsed > _criticalQueryExecutionTime)
             _logger?.LogWarning(message, elapsed, detailedChanges);
@@ -426,9 +428,8 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
             _logger?.LogTrace(message, elapsed, detailedChanges);
     }
 
-    private void LogDelete(string message, TimeSpan elapsed, string changes)
+    private void LogDelete(string message, TimeSpan elapsed, string? changes)
     {
         LogFind(message, elapsed, changes);
     }
-
 }

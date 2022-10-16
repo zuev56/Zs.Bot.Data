@@ -6,11 +6,11 @@ namespace Zs.Bot.Data.Models;
 
 public class ChatType : IDbEntity<ChatType, string>
 {
-    public string Id { get; set; }
-    public string Name { get; set; }
+    public string Id { get; set; } = null!;
+    public string Name { get; set; } = null!;
     public Func<ChatType> GetItemForSave => () => this;
     public Func<ChatType, ChatType> GetItemForUpdate => (existingItem) => this;
-    public ICollection<Chat> Chats { get; set; }
+    public ICollection<Chat> Chats { get; set; } = null!;
     public override string ToString() => Name;
 }
 

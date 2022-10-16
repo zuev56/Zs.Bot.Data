@@ -13,12 +13,12 @@ public sealed class CommandsRepository<TContext> : CommonRepository<TContext, Co
     public CommandsRepository(
         IDbContextFactory<TContext> contextFactory,
         TimeSpan? criticalQueryExecutionTimeForLogging = null,
-        ILogger<CommonRepository<TContext, Command, string>> logger = null)
+        ILogger<CommonRepository<TContext, Command, string>>? logger = null)
         : base(contextFactory, criticalQueryExecutionTimeForLogging, logger)
     {
     }
 
-    public async Task<Command> FindWhereIdLikeValueAsync(string value)
+    public async Task<Command?> FindWhereIdLikeValueAsync(string value)
     {
         return await FindAsync(c => EF.Functions.Like(c.Id, value)).ConfigureAwait(false);
     }

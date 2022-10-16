@@ -7,12 +7,12 @@ namespace Zs.Bot.Data.Models;
 public class Chat : IDbEntityWithRawData<Chat, int>
 {
     public int Id { get; set; }
-    public string Name { get; set; }
-    public string Description { get; set; }
-    public string ChatTypeId { get; set; }
-    public string RawData { get; set; }
-    public string RawDataHash { get; set; }
-    public string RawDataHistory { get; set; }
+    public string Name { get; set; } = null!;
+    public string? Description { get; set; }
+    public string ChatTypeId { get; set; } = null!;
+    public string RawData { get; set; } = null!;
+    public string RawDataHash { get; set; } = null!;
+    public string? RawDataHistory { get; set; }
     public DateTime UpdateDate { get; set; }
     public DateTime InsertDate { get; set; }
     public Func<Chat> GetItemForSave => () => this;
@@ -31,15 +31,15 @@ public class Chat : IDbEntityWithRawData<Chat, int>
         };
 
 
-    public ChatType ChatType { get; set; }
-    public ICollection<Message> Messages { get; set; }
+    public ChatType ChatType { get; set; } = null!;
+    public ICollection<Message> Messages { get; set; } = null!;
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return Equals(obj as Chat);
     }
 
-    public bool Equals(Chat other)
+    public bool Equals(Chat? other)
     {
         return other != null &&
                Id == other.Id &&

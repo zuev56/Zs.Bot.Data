@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Zs.Bot.Data.Abstractions;
-using Zs.Common.Exceptions;
 using Zs.Common.Extensions;
 
 namespace Zs.Bot.Data.Repositories;
@@ -17,15 +16,16 @@ namespace Zs.Bot.Data.Repositories;
 /// <typeparam name="TId">Primary key type</typeparam>
 /// <typeparam name="TContext">DB Context</typeparam>
 public abstract class ItemsWithRawDataRepository<TContext, TEntity, TId> : CommonRepository<TContext, TEntity, TId>, IItemsWithRawDataRepository<TEntity, TId>
+    where TId : notnull
     where TEntity : class, IDbEntityWithRawData<TEntity, TId>
     where TContext : DbContext
 {
-    private readonly ILogger<ItemsWithRawDataRepository<TContext, TEntity, TId>> _logger;
+    private readonly ILogger<ItemsWithRawDataRepository<TContext, TEntity, TId>>? _logger;
 
     public ItemsWithRawDataRepository(
         IDbContextFactory<TContext> contextFactory,
         TimeSpan? criticalQueryExecutionTimeForLogging = null,
-        ILogger<ItemsWithRawDataRepository<TContext, TEntity, TId>> logger = null)
+        ILogger<ItemsWithRawDataRepository<TContext, TEntity, TId>>? logger = null)
         : base(contextFactory, criticalQueryExecutionTimeForLogging, logger)
     {
         _logger = logger;
@@ -33,16 +33,16 @@ public abstract class ItemsWithRawDataRepository<TContext, TEntity, TId> : Commo
         BeforeUpdateItem = MergeRawDataFields;
     }
 
-    public async Task<TId> GetActualIdByRawDataHashAsync(TEntity item)
+    public async Task<TId?> GetActualIdByRawDataHashAsync(TEntity item)
     {
         if (item is null)
             throw new ArgumentNullException(nameof(item));
 
         var dbItem = await FindAsync(i => i.RawDataHash == item.RawDataHash);
 
-        return dbItem != default && !dbItem.Id.Equals(default(TId))
+        return dbItem != default && !dbItem.Id!.Equals(default(TId))
             ? dbItem.Id
-            : throw new ItemNotFoundException(item);
+            : default;
     }
 
     /// <summary>If items RawData properties are different, copies RawDataHistory and compement it with current</summary>

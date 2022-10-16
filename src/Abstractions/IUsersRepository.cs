@@ -7,6 +7,6 @@ namespace Zs.Bot.Data.Abstractions;
 
 public interface IUsersRepository : IItemsWithRawDataRepository<User, int>
 {
-    Task<User> FindByRawDataIdAsync(long rawId);
+    Task<User?> FindByRawDataIdAsync(long rawId);
     Task<List<User>> FindByRoleIdsAsync(IEnumerable<Role> userRoles);
 }

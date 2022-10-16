@@ -13,10 +13,10 @@ public abstract class ChatsRepositoryBase<TContext> : ItemsWithRawDataRepository
     protected ChatsRepositoryBase(
         IDbContextFactory<TContext> contextFactory,
         TimeSpan? criticalQueryExecutionTimeForLogging = null,
-        ILogger<ChatsRepositoryBase<TContext>> logger = null)
+        ILogger<ChatsRepositoryBase<TContext>>? logger = null)
         : base(contextFactory, criticalQueryExecutionTimeForLogging, logger)
     {
     }
 
-    public abstract Task<Chat> FindByRawDataIdAsync(long rawId);
+    public abstract Task<Chat?> FindByRawDataIdAsync(long rawId);
 }
