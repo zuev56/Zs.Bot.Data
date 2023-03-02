@@ -4,7 +4,7 @@ using Zs.Bot.Data.Abstractions;
 
 namespace Zs.Bot.Data.Models;
 
-public class Chat : IDbEntityWithRawData<Chat, int>
+public sealed class Chat : IDbEntityWithRawData<Chat, int>
 {
     public int Id { get; set; }
     public string Name { get; set; } = null!;
@@ -16,16 +16,16 @@ public class Chat : IDbEntityWithRawData<Chat, int>
     public DateTime UpdateDate { get; set; }
     public DateTime InsertDate { get; set; }
     public Func<Chat> GetItemForSave => () => this;
-    public Func<Chat, Chat> GetItemForUpdate => (existingItem) =>
+    public Func<Chat, Chat> GetItemForUpdate => existingItem =>
         new Chat
         {
             Id = existingItem.Id,
-            Name = this.Name,
-            Description = this.Description,
-            ChatTypeId = this.ChatTypeId,
-            RawData = this.RawData,
-            RawDataHash = this.RawDataHash,
-            RawDataHistory = this.RawDataHistory,
+            Name = Name,
+            Description = Description,
+            ChatTypeId = ChatTypeId,
+            RawData = RawData,
+            RawDataHash = RawDataHash,
+            RawDataHistory = RawDataHistory,
             UpdateDate = DateTime.UtcNow,
             InsertDate = existingItem.InsertDate
         };
@@ -66,4 +66,3 @@ public class Chat : IDbEntityWithRawData<Chat, int>
 
     public override string ToString() => $"{Name} ({Id} | {ChatType})";
 }
-

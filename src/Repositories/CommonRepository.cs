@@ -33,10 +33,10 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
     // TODO: Make specific delegate type
     /// <summary> Calls before items update. 
     /// First argument - saving item, second argument - existing item from database </summary>
-    protected Action<TEntity, TEntity> BeforeUpdateItem { get; set; } = null!;
+    protected Action<TEntity, TEntity>? BeforeUpdateItem { get; set; }
 
 
-    public CommonRepository(
+    protected CommonRepository(
         IDbContextFactory<TContext> contextFactory,
         TimeSpan? criticalQueryExecutionTimeForLogging = null,
         ILogger<CommonRepository<TContext, TEntity, TId>>? logger = null)
@@ -48,7 +48,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
     protected async Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default)
     {
-        await using (var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+        await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
         {
             return predicate != null
                 ? await context.Set<TEntity>().CountAsync(predicate, cancellationToken).ConfigureAwait(false)
@@ -64,7 +64,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
         try
         {
-            await using (var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+            await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 var query = context.Set<TEntity>();
 
@@ -88,7 +88,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
         try
         {
-            await using (var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+            await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 var query = context.Set<TEntity>().FromSqlRaw(sql);
 
@@ -201,7 +201,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
     public async Task<List<TEntity>> FindAllAsync(TId[] ids, CancellationToken cancellationToken = default)
     {
-        return await FindAllAsync(i => ids.Contains(i.Id)).ConfigureAwait(false);
+        return await FindAllAsync(i => ids.Contains(i.Id), cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
     protected async Task<List<TEntity>> FindAllBySqlAsync(string sql, CancellationToken cancellationToken = default)
@@ -212,7 +212,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
         try
         {
-            await using (var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+            await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 var query = context.Set<TEntity>().FromSqlRaw(sql);
 
@@ -230,8 +230,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
     public virtual async Task<bool> SaveAsync(TEntity item, CancellationToken cancellationToken = default)
     {
-        if (item is null)
-            throw new ArgumentNullException(nameof(item));
+        ArgumentNullException.ThrowIfNull(item);
 
         var sw = new Stopwatch();
         sw.Start();
@@ -240,7 +239,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
         try
         {
-            await using (var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+            await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 var itemToSave = await AddItemToContextForSave(context, item, cancellationToken).ConfigureAwait(false);
 
@@ -249,7 +248,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
                     resultChanges = Environment.NewLine + context.ChangeTracker.ToDebugString(ChangeTrackerDebugStringOptions.ShortDefault);
                     detailedResultChanges = Environment.NewLine + context.ChangeTracker.ToDebugString(ChangeTrackerDebugStringOptions.LongDefault);
 
-                    int changes = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                    var changes = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                     item.Id = itemToSave.Id;
                     return changes == 1;
                 }
@@ -266,8 +265,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
     public virtual async Task<bool> SaveRangeAsync(IEnumerable<TEntity> items, CancellationToken cancellationToken = default)
     {
-        if (items is null)
-            throw new ArgumentNullException(nameof(items));
+        ArgumentNullException.ThrowIfNull(items);
 
         var sw = new Stopwatch();
         sw.Start();
@@ -276,7 +274,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
         try
         {
-            await using (var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+            await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 var itemsToSave = new List<TEntity>();
                 foreach (var item in items)
@@ -289,7 +287,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
                     resultChanges = context.ChangeTracker.ToDebugString(ChangeTrackerDebugStringOptions.ShortDefault);
                     detailedResultChanges = context.ChangeTracker.ToDebugString(ChangeTrackerDebugStringOptions.LongDefault);
 
-                    int changes = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                    var changes = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                     var itemsList = items.ToList();
                     for (int i = 0; i < itemsToSave.Count; i++)
@@ -312,7 +310,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
     private async Task<TEntity> AddItemToContextForSave(TContext context, TEntity item, CancellationToken cancellationToken)
     {
-        var itemToSave = item.GetItemForSave?.Invoke();
+        var itemToSave = item.GetItemForSave.Invoke();
 
         if (itemToSave is null)
             throw new InvalidOperationException("Item for save can not be null!");
@@ -346,8 +344,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
     public virtual async Task<bool> DeleteAsync(TEntity item, CancellationToken cancellationToken = default)
     {
-        if (item is null)
-            throw new ArgumentNullException(nameof(item));
+        ArgumentNullException.ThrowIfNull(item);
 
         var sw = new Stopwatch();
         sw.Start();
@@ -355,7 +352,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
         try
         {
-            await using (var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+            await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 var existingItem = await context.Set<TEntity>().FirstOrDefaultAsync(i => i.Id.Equals(item.Id), cancellationToken).ConfigureAwait(false);
                 if (existingItem != null)
@@ -366,7 +363,6 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
                     return await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false) == 1;
                 }
             }
-
 
             return false;
         }
@@ -379,8 +375,7 @@ public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEn
 
     public virtual async Task<bool> DeleteRangeAsync(IEnumerable<TEntity> items, CancellationToken cancellationToken = default)
     {
-        if (items is null)
-            throw new ArgumentNullException(nameof(items));
+        ArgumentNullException.ThrowIfNull(items);
 
         var sw = new Stopwatch();
         sw.Start();

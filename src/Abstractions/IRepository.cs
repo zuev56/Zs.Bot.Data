@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 namespace Zs.Bot.Data.Abstractions;
 
 /// <summary>  </summary>
-/// <typeparam name="TEntity">Search entity type</typeparam>
+/// <typeparam name="TKey">Primary key type</typeparam>
+/// <typeparam name="TEntity">Entity type</typeparam>
 public interface IRepository<TEntity, TKey>
     where TKey : notnull
     where TEntity : class, IDbEntity<TEntity, TKey>

@@ -26,7 +26,7 @@ public abstract class UsersRepositoryBase<TContext> : ItemsWithRawDataRepository
 
     public async Task<List<User>> FindByRoleIdsAsync(IEnumerable<Role> userRoles)
     {
-        var userRoleIds = userRoles.Select(r => r.ToString().ToUpperInvariant());
+        var userRoleIds = userRoles.Select(static r => r.ToString().ToUpperInvariant());
         return await FindAllAsync(u => userRoleIds.Contains(u.UserRoleId)).ConfigureAwait(false);
     }
 }

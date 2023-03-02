@@ -9,8 +9,7 @@ public class ChatType : IDbEntity<ChatType, string>
     public string Id { get; set; } = null!;
     public string Name { get; set; } = null!;
     public Func<ChatType> GetItemForSave => () => this;
-    public Func<ChatType, ChatType> GetItemForUpdate => (existingItem) => this;
+    public Func<ChatType, ChatType> GetItemForUpdate => _ => this;
     public ICollection<Chat> Chats { get; set; } = null!;
     public override string ToString() => Name;
 }
-

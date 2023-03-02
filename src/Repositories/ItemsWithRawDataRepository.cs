@@ -35,8 +35,7 @@ public abstract class ItemsWithRawDataRepository<TContext, TEntity, TId> : Commo
 
     public async Task<TId?> GetActualIdByRawDataHashAsync(TEntity item)
     {
-        if (item is null)
-            throw new ArgumentNullException(nameof(item));
+        ArgumentNullException.ThrowIfNull(item);
 
         var dbItem = await FindAsync(i => i.RawDataHash == item.RawDataHash);
 
@@ -48,24 +47,24 @@ public abstract class ItemsWithRawDataRepository<TContext, TEntity, TId> : Commo
     /// <summary>If items RawData properties are different, copies RawDataHistory and compement it with current</summary>
     /// <param name="existingItem"></param>
     /// <param name="newItem"></param>
-    private void MergeRawDataFields(TEntity newItem, TEntity existingItem)
+    private static void MergeRawDataFields(TEntity newItem, TEntity existingItem)
     {
         if (newItem.RawData != existingItem.RawData)
         {
             newItem.RawDataHistory = existingItem.RawDataHistory;
 
-            if (newItem.RawDataHistory == null && newItem.RawData != null)
+            if (newItem.RawDataHistory == null)
             {
                 newItem.RawDataHistory = $"[{existingItem.RawData}]".NormalizeJsonString();
             }
-            else if (newItem.RawDataHistory != null)
+            else
             {
                 var rawDataHistory = JsonSerializer.Deserialize<JsonElement>(newItem.RawDataHistory).EnumerateArray().ToList();
                 rawDataHistory.Add(JsonSerializer.Deserialize<JsonElement>(existingItem.RawData));
                 newItem.RawDataHistory = JsonSerializer.Serialize(rawDataHistory).NormalizeJsonString();
             }
 
-            newItem.RawDataHash = newItem.RawData.GetMD5Hash();
+            newItem.RawDataHash = newItem.RawData.GetMd5Hash();
         }
     }
 }

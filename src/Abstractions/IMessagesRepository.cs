@@ -11,5 +11,5 @@ public interface IMessagesRepository : IItemsWithRawDataRepository<Message, int>
     Task<List<Message>> FindDailyMessages(int chatId);
     Task<List<Message>> FindBotDialogMessagesInTimeRange(int chatId, int botUserId, string botName, DateTime fromDate, DateTime toDate);
     Task<Dictionary<int, int>> FindUserIdsAndMessagesCountSinceDate(int chatId, DateTime? startDate);
-    Task<List<Message>> FindAllTodaysMessagesWithTextAsync(string searchText);
+    Task<List<Message>> FindAllTodayMessagesWithTextAsync(string searchText);
 }

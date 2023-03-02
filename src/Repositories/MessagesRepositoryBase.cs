@@ -32,10 +32,12 @@ public abstract class MessagesRepositoryBase<TContext> : ItemsWithRawDataReposit
               && m.InsertDate > fromDate
               && m.InsertDate < toDate
               && !m.IsDeleted
-              && (m.UserId == botUserId || (m.Text != null && m.Text.Trim().IndexOf("/") == 0 && m.Text.Contains(botName)))).ConfigureAwait(false);
+              && (m.UserId == botUserId ||
+                  (m.Text != null && m.Text.Trim().IndexOf("/", StringComparison.Ordinal) == 0 && m.Text.Contains(botName))))
+            .ConfigureAwait(false);
     }
 
-    public async Task<List<Message>> FindAllTodaysMessagesWithTextAsync(string searchText)
+    public async Task<List<Message>> FindAllTodayMessagesWithTextAsync(string searchText)
     {
         return await FindAllAsync(m => m.InsertDate > DateTime.UtcNow.Date
                                     && m.Text != null

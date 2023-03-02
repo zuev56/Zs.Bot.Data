@@ -5,7 +5,7 @@ using Zs.Common.Extensions;
 
 namespace Zs.Bot.Data.Models;
 
-public class User : IDbEntityWithRawData<User, int>
+public sealed class User : IDbEntityWithRawData<User, int>
 {
     public int Id { get; set; }
     public string? Name { get; set; }
@@ -21,18 +21,18 @@ public class User : IDbEntityWithRawData<User, int>
     public Enums.Role UserRole => GetUserRole();
 
     public Func<User> GetItemForSave => () => this;
-    public Func<User, User> GetItemForUpdate => (existingItem) =>
+    public Func<User, User> GetItemForUpdate => existingItem =>
     {
         return new User
         {
             Id = existingItem.Id,
-            Name = this.Name,
-            FullName = this.FullName,
+            Name = Name,
+            FullName = FullName,
             UserRoleId = existingItem.UserRoleId,
             IsBot = existingItem.IsBot,
-            RawData = this.RawData,
-            RawDataHash = this.RawDataHash,
-            RawDataHistory = this.RawDataHistory,
+            RawData = RawData,
+            RawDataHash = RawDataHash,
+            RawDataHistory = RawDataHistory,
             UpdateDate = DateTime.UtcNow,
             InsertDate = existingItem.InsertDate
         };

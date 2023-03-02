@@ -3,7 +3,7 @@ using Zs.Bot.Data.Abstractions;
 
 namespace Zs.Bot.Data.Models;
 
-public class Message : IDbEntityWithRawData<Message, int>
+public sealed class Message : IDbEntityWithRawData<Message, int>
 {
     public int Id { get; set; }
     public int? ReplyToMessageId { get; set; }
@@ -30,41 +30,41 @@ public class Message : IDbEntityWithRawData<Message, int>
     public Func<Message> GetItemForSave => () =>
         new Message
         {
-            Id = this.Id,
-            ReplyToMessageId = this.ReplyToMessageId,
-            MessengerId = this.MessengerId,
-            MessageTypeId = this.MessageTypeId,
-            UserId = this.UserId,
-            ChatId = this.ChatId,
-            Text = this.Text?.Length > 100 ? this.Text.Substring(0, 100) : this.Text,
-            RawData = this.RawData,
-            RawDataHash = this.RawDataHash,
-            RawDataHistory = this.RawDataHistory,
-            IsSucceed = this.IsSucceed,
-            FailsCount = this.FailsCount,
-            FailDescription = this.FailDescription,
-            IsDeleted = this.IsDeleted,
-            UpdateDate = this.UpdateDate,
-            InsertDate = this.InsertDate,
+            Id = Id,
+            ReplyToMessageId = ReplyToMessageId,
+            MessengerId = MessengerId,
+            MessageTypeId = MessageTypeId,
+            UserId = UserId,
+            ChatId = ChatId,
+            Text = Text?.Length > 100 ? Text.Substring(0, 100) : Text,
+            RawData = RawData,
+            RawDataHash = RawDataHash,
+            RawDataHistory = RawDataHistory,
+            IsSucceed = IsSucceed,
+            FailsCount = FailsCount,
+            FailDescription = FailDescription,
+            IsDeleted = IsDeleted,
+            UpdateDate = UpdateDate,
+            InsertDate = InsertDate,
         };
 
     public Func<Message, Message> GetItemForUpdate => (existingItem) =>
         new Message
         {
             Id = existingItem.Id,
-            ReplyToMessageId = this.ReplyToMessageId,
+            ReplyToMessageId = ReplyToMessageId,
             MessengerId = existingItem.MessengerId,
-            MessageTypeId = this.MessageTypeId,
+            MessageTypeId = MessageTypeId,
             UserId = existingItem.UserId,
             ChatId = existingItem.ChatId,
-            Text = this.Text,
-            RawData = this.RawData,
-            RawDataHash = this.RawDataHash,
-            RawDataHistory = this.RawDataHistory,
+            Text = Text,
+            RawData = RawData,
+            RawDataHash = RawDataHash,
+            RawDataHistory = RawDataHistory,
             IsSucceed = existingItem.IsSucceed,
             FailsCount = existingItem.FailsCount,
             FailDescription = existingItem.FailDescription,
-            IsDeleted = this.IsDeleted,
+            IsDeleted = IsDeleted,
             UpdateDate = DateTime.UtcNow,
             InsertDate = existingItem.InsertDate,
         };
@@ -117,24 +117,23 @@ public class Message : IDbEntityWithRawData<Message, int>
     {
         return new Message
         {
-            Id = this.Id,
-            ReplyToMessageId = this.ReplyToMessageId,
-            MessengerId = this.MessengerId,
-            MessageTypeId = this.MessageTypeId,
-            UserId = this.UserId,
-            ChatId = this.ChatId,
-            Text = this.Text,
-            RawData = this.RawData,
-            RawDataHash = this.RawDataHash,
-            RawDataHistory = this.RawDataHistory,
-            IsSucceed = this.IsSucceed,
-            FailsCount = this.FailsCount,
-            FailDescription = this.FailDescription,
-            IsDeleted = this.IsDeleted,
-            UpdateDate = this.UpdateDate,
-            InsertDate = this.InsertDate,
+            Id = Id,
+            ReplyToMessageId = ReplyToMessageId,
+            MessengerId = MessengerId,
+            MessageTypeId = MessageTypeId,
+            UserId = UserId,
+            ChatId = ChatId,
+            Text = Text,
+            RawData = RawData,
+            RawDataHash = RawDataHash,
+            RawDataHistory = RawDataHistory,
+            IsSucceed = IsSucceed,
+            FailsCount = FailsCount,
+            FailDescription = FailDescription,
+            IsDeleted = IsDeleted,
+            UpdateDate = UpdateDate,
+            InsertDate = InsertDate,
         };
     }
     public override string ToString() => Id.ToString();
 }
-

@@ -11,6 +11,5 @@ public class Command : IDbEntity<Command, string>
     public string? Description { get; set; }
     public string Group { get; set; } = null!;
     public Func<Command> GetItemForSave => () => this;
-    public Func<Command, Command> GetItemForUpdate => (existingItem) => this;
+    public Func<Command, Command> GetItemForUpdate => _ => this;
 }
-

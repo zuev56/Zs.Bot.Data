@@ -1,6 +1,6 @@
 ﻿namespace Zs.Bot.Data.Enums;
 
-public enum MessageAction : short
+public enum MessageAction
 {
     Undefined = -1,
     Received = 0,
