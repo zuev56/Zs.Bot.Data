@@ -5,6 +5,8 @@ VisualStudioVersion = 17.1.32228.430
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zs.Bot.Data", "src\Zs.Bot.Data.csproj", "{543F915F-1E11-4D56-AEDD-255F5D988E38}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.Bot.Data.UnitTests", "tests\Zs.Bot.Data.UnitTests\Zs.Bot.Data.UnitTests.csproj", "{92C8E657-9204-4E4F-8F6C-E0583ECAFAB8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{543F915F-1E11-4D56-AEDD-255F5D988E38}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{543F915F-1E11-4D56-AEDD-255F5D988E38}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{543F915F-1E11-4D56-AEDD-255F5D988E38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92C8E657-9204-4E4F-8F6C-E0583ECAFAB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92C8E657-9204-4E4F-8F6C-E0583ECAFAB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92C8E657-9204-4E4F-8F6C-E0583ECAFAB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92C8E657-9204-4E4F-8F6C-E0583ECAFAB8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

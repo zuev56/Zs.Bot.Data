@@ -1,9 +1,9 @@
-﻿namespace Zs.Bot.Data.Enums;
+﻿namespace Zs.Bot.Data.Models;
 
 public enum MessageAction
 {
-    Undefined = -1,
-    Received = 0,
+    Undefined = 0,
+    Received,
     Sending,
     Sent,
     Edited,

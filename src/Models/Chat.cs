@@ -1,68 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Zs.Bot.Data.Abstractions;
+﻿namespace Zs.Bot.Data.Models;
 
-namespace Zs.Bot.Data.Models;
-
-public sealed class Chat : IDbEntityWithRawData<Chat, int>
+public sealed class Chat : DbEntity
 {
-    public int Id { get; set; }
     public string Name { get; set; } = null!;
-    public string? Description { get; set; }
-    public string ChatTypeId { get; set; } = null!;
-    public string RawData { get; set; } = null!;
-    public string RawDataHash { get; set; } = null!;
-    public string? RawDataHistory { get; set; }
-    public DateTime UpdateDate { get; set; }
-    public DateTime InsertDate { get; set; }
-    public Func<Chat> GetItemForSave => () => this;
-    public Func<Chat, Chat> GetItemForUpdate => existingItem =>
-        new Chat
-        {
-            Id = existingItem.Id,
-            Name = Name,
-            Description = Description,
-            ChatTypeId = ChatTypeId,
-            RawData = RawData,
-            RawDataHash = RawDataHash,
-            RawDataHistory = RawDataHistory,
-            UpdateDate = DateTime.UtcNow,
-            InsertDate = existingItem.InsertDate
-        };
+    public ChatType Type { get; set; }
 
-
-    public ChatType ChatType { get; set; } = null!;
-    public ICollection<Message> Messages { get; set; } = null!;
-
-    public override bool Equals(object? obj)
-    {
-        return Equals(obj as Chat);
-    }
-
-    public bool Equals(Chat? other)
-    {
-        return other != null &&
-               Id == other.Id &&
-               Name == other.Name &&
-               Description == other.Description &&
-               ChatTypeId == other.ChatTypeId &&
-               RawData == other.RawData &&
-               RawDataHash == other.RawDataHash &&
-               RawDataHistory == other.RawDataHistory;
-    }
-
-    public override int GetHashCode()
-    {
-        HashCode hash = new HashCode();
-        hash.Add(Id);
-        hash.Add(Name);
-        hash.Add(Description);
-        hash.Add(ChatTypeId);
-        hash.Add(RawData);
-        hash.Add(RawDataHash);
-        hash.Add(RawDataHistory);
-        return hash.ToHashCode();
-    }
-
-    public override string ToString() => $"{Name} ({Id} | {ChatType})";
+    public override string ToString() => $"{Name} ({Id} | {Type})";
 }
