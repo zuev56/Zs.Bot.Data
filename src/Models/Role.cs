@@ -1,8 +1,8 @@
-﻿namespace Zs.Bot.Data.Enums;
+﻿namespace Zs.Bot.Data.Models;
 
 public enum Role
 {
-    User,
+    Guest = 1,
     Moderator,
     Admin,
     Owner

@@ -1,430 +1,184 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.Extensions.Logging;
-using Zs.Bot.Data.Abstractions;
+using Zs.Bot.Data.Models;
+using Zs.Bot.Data.Queries;
 
 namespace Zs.Bot.Data.Repositories;
 
-/// <summary>
-/// Universal repository
-/// </summary>
-/// <typeparam name="TEntity">Entity type</typeparam>
-/// <typeparam name="TId">Primary key type</typeparam>
-/// <typeparam name="TContext">DB Context</typeparam>
-public abstract class CommonRepository<TContext, TEntity, TId> : IRepository<TEntity, TId>
-    where TId : notnull
-    where TEntity : class, IDbEntity<TEntity, TId>
+public abstract class CommonRepository<TContext, TEntity> : IRepository<TEntity>
+    where TEntity : DbEntity
     where TContext : DbContext
 {
-    private readonly TimeSpan _criticalQueryExecutionTime;
-    private readonly ILogger<CommonRepository<TContext, TEntity, TId>>? _logger;
-
+    protected IQueryFactory QueryFactory { get; }
     protected IDbContextFactory<TContext> ContextFactory { get; }
-
-    // TODO: Return Result on save or delete
-
-    // TODO: Make specific delegate type
-    /// <summary> Calls before items update. 
-    /// First argument - saving item, second argument - existing item from database </summary>
-    protected Action<TEntity, TEntity>? BeforeUpdateItem { get; set; }
-
 
     protected CommonRepository(
         IDbContextFactory<TContext> contextFactory,
-        TimeSpan? criticalQueryExecutionTimeForLogging = null,
-        ILogger<CommonRepository<TContext, TEntity, TId>>? logger = null)
+        IQueryFactory queryFactory)
     {
-        ContextFactory = contextFactory ?? throw new NullReferenceException(nameof(contextFactory));
-        _criticalQueryExecutionTime = criticalQueryExecutionTimeForLogging ?? TimeSpan.FromSeconds(1);
-        _logger = logger;
+        ContextFactory = contextFactory;
+        QueryFactory = queryFactory;
     }
 
-    protected async Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default)
+    protected async Task<IReadOnlyList<TEntity>> FindByRawDataConditionAsync(ICondition condition, CancellationToken cancellationToken)
     {
-        await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
-        {
-            return predicate != null
-                ? await context.Set<TEntity>().CountAsync(predicate, cancellationToken).ConfigureAwait(false)
-                : await context.Set<TEntity>().CountAsync(cancellationToken).ConfigureAwait(false);
-        }
+        var tableName = await GetTableNameAsync(cancellationToken).ConfigureAwait(false);
+        var findByRawDataIdSql = QueryFactory.CreateFindByConditionQuery(tableName, condition);
+        var entities = await FindAllBySqlAsync(findByRawDataIdSql, cancellationToken).ConfigureAwait(false);
+
+        return entities;
     }
 
-    public virtual async Task<TEntity?> FindByIdAsync(TId id, CancellationToken cancellationToken = default)
+    private async Task<string> GetTableNameAsync(CancellationToken cancellationToken)
     {
-        var sw = new Stopwatch();
-        sw.Start();
-        string? resultQuery = null;
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var entityType = typeof(TEntity);
+        var schemaName = context.Model.FindEntityType(entityType)!.GetSchema()!;
+        var tableName = context.Model.FindEntityType(entityType)!.GetTableName()!;
+        var fullTableName = string.IsNullOrWhiteSpace(schemaName)
+            ? tableName
+            : $"{schemaName}.{tableName}";
 
-        try
-        {
-            await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
-            {
-                var query = context.Set<TEntity>();
-
-                resultQuery = query.ToQueryString();
-
-                return await query.AsNoTracking().FirstOrDefaultAsync(i => i.Id.Equals(id), cancellationToken).ConfigureAwait(false);
-            }
-        }
-        finally
-        {
-            sw.Stop();
-            LogFind("Repository.FindByIdAsync [Elapsed: {Elapsed}].\n\tSQL: {SQL}", sw.Elapsed, resultQuery);
-        }
+        return fullTableName;
     }
 
-    protected virtual async Task<TEntity?> FindBySqlAsync(string sql, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
-        var sw = new Stopwatch();
-        sw.Start();
-        string? resultQuery = null;
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var exists = await context.Set<TEntity>().AnyAsync(i => i.Id == id, cancellationToken).ConfigureAwait(false);
 
-        try
-        {
-            await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
-            {
-                var query = context.Set<TEntity>().FromSqlRaw(sql);
-
-                resultQuery = query.ToQueryString();
-
-                return await query.AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-            }
-        }
-        finally
-        {
-            sw.Stop();
-            LogFind("Repository.FindBySqlAsync [Elapsed: {Elapsed}].\n\tSQL: {SQL}", sw.Elapsed, resultQuery);
-        }
+        return exists;
     }
 
-    /// <summary>
-    /// Asynchronously returns the first element of a sequence that satisfies a specified
-    /// condition or a default value if no such element is found
-    /// </summary>
-    /// <param name="predicate"></param>
-    /// <param name="orderBy"> Sorting rules before executing predicate</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    protected virtual async Task<TEntity?> FindAsync(
-        Expression<Func<TEntity, bool>>? predicate = null,
+    public async Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var count = predicate != null
+            ? await context.Set<TEntity>().CountAsync(predicate, cancellationToken).ConfigureAwait(false)
+            : await context.Set<TEntity>().CountAsync(cancellationToken).ConfigureAwait(false);
+
+        return count;
+    }
+
+    public virtual async Task<TEntity?> FindAsync(long id, CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var query = context.Set<TEntity>();
+        var entity = await query.AsNoTracking().FirstOrDefaultAsync(i => i.Id.Equals(id), cancellationToken).ConfigureAwait(false);
+
+        return entity;
+    }
+
+    protected async Task<TEntity?> FindBySqlAsync(string sql, CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var query = context.Set<TEntity>().FromSqlRaw(sql);
+        var entity = await query.AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+
+        return entity;
+    }
+
+    internal async Task<TEntity?> FindAsync(
+        Expression<Func<TEntity, bool>> predicate,
         Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
         CancellationToken cancellationToken = default)
     {
-        var sw = new Stopwatch();
-        sw.Start();
-        string? resultQuery = null;
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var query = context.Set<TEntity>().Where(predicate);
+        if (orderBy != null)
+            query = orderBy(query);
 
-        try
-        {
-            await using (var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false))
-            {
-                IQueryable<TEntity> query = context.Set<TEntity>();
+        var entity = await query.AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
-                if (predicate != null)
-                    query = query.Where(predicate);
-
-                if (orderBy != null)
-                    query = orderBy(query);
-
-                resultQuery = query.ToQueryString();
-
-                return await query.AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-            }
-        }
-        finally
-        {
-            sw.Stop();
-            LogFind("Repository.FindAsync [Elapsed: {Elapsed}].\n\tSQL: {SQL}", sw.Elapsed, resultQuery);
-        }
+        return entity;
     }
 
-    /// <summary>Asynchronously returns the list of elements</summary>
-    public async Task<List<TEntity>> FindAllAsync(int? skip = null, int? take = null, CancellationToken cancellationToken = default)
-    {
-        return await FindAllAsync(null, null, skip, take, cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// Asynchronously returns the list of elements of a sequence that satisfies a specified condition
-    /// </summary>
-    /// <param name="predicate"></param>
-    /// <param name="orderBy"> Sorting rules before executing predicate</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    protected virtual async Task<List<TEntity>> FindAllAsync(
+    internal async Task<IReadOnlyList<TEntity>> FindAllAsync(
         Expression<Func<TEntity, bool>>? predicate = null,
         Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
         int? skip = null,
         int? take = null,
         CancellationToken cancellationToken = default)
     {
-        var sw = new Stopwatch();
-        sw.Start();
-        string? resultQuery = null;
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        IQueryable<TEntity> query = context.Set<TEntity>();
 
-        try
-        {
-            await using (var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false))
-            {
-                IQueryable<TEntity> query = context.Set<TEntity>();
+        if (predicate != null)
+            query = query.Where(predicate);
 
-                if (predicate != null)
-                    query = query.Where(predicate);
+        if (orderBy != null)
+            query = orderBy(query);
 
-                if (orderBy != null)
-                    query = orderBy(query);
+        if (skip != null)
+            query = query.Skip((int)skip);
 
-                if (skip != null)
-                    query = query.Skip((int)skip);
+        if (take != null)
+            query = query.Take((int)take);
 
-                if (take != null)
-                    query = query.Take((int)take);
+        var entities = await query.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
 
-                resultQuery = query.ToQueryString();
-
-                return await query.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
-            }
-        }
-        finally
-        {
-            sw.Stop();
-            LogFind("Repository.FindAllAsync [Elapsed: {Elapsed}].\n\tSQL: {SQL}", sw.Elapsed, resultQuery);
-        }
+        return entities;
     }
 
-    public async Task<List<TEntity>> FindAllAsync(TId[] ids, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TEntity>> FindAllAsync(CancellationToken cancellationToken)
+    {
+        return await FindAllAsync(predicate: null, cancellationToken: cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<TEntity>> FindAllAsync(long[] ids, CancellationToken cancellationToken = default)
     {
         return await FindAllAsync(i => ids.Contains(i.Id), cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
-    protected async Task<List<TEntity>> FindAllBySqlAsync(string sql, CancellationToken cancellationToken = default)
+    protected async Task<IReadOnlyList<TEntity>> FindAllBySqlAsync(string sql, CancellationToken cancellationToken = default)
     {
-        var sw = new Stopwatch();
-        sw.Start();
-        string? resultQuery = null;
+        ArgumentException.ThrowIfNullOrEmpty(sql);
 
-        try
-        {
-            await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
-            {
-                var query = context.Set<TEntity>().FromSqlRaw(sql);
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var query = context.Set<TEntity>().FromSqlRaw(sql);
+        var entities = await query.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
 
-                resultQuery = query.ToQueryString();
-
-                return await query.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
-            }
-        }
-        finally
-        {
-            sw.Stop();
-            LogFind("Repository.FindAllBySqlAsync [Elapsed: {Elapsed}].\n\tSQL: {SQL}", sw.Elapsed, resultQuery);
-        }
+        return entities;
     }
 
-    public virtual async Task<bool> SaveAsync(TEntity item, CancellationToken cancellationToken = default)
+    public virtual async Task<int> AddAsync(TEntity item, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        var sw = new Stopwatch();
-        sw.Start();
-        string? resultChanges = null;
-        string? detailedResultChanges = null;
-
-        try
-        {
-            await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
-            {
-                var itemToSave = await AddItemToContextForSave(context, item, cancellationToken).ConfigureAwait(false);
-
-                if (context.ChangeTracker.HasChanges())
-                {
-                    resultChanges = Environment.NewLine + context.ChangeTracker.ToDebugString(ChangeTrackerDebugStringOptions.ShortDefault);
-                    detailedResultChanges = Environment.NewLine + context.ChangeTracker.ToDebugString(ChangeTrackerDebugStringOptions.LongDefault);
-
-                    var changes = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-                    item.Id = itemToSave.Id;
-                    return changes == 1;
-                }
-            }
-
-            return false;
-        }
-        finally
-        {
-            sw.Stop();
-            LogSave("Repository.SaveAsync [Elapsed: {Elapsed}].\n\tChanges: {changes}", sw.Elapsed, resultChanges, detailedResultChanges);
-        }
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        context.Set<TEntity>().Add(item);
+        return await context.SaveChangesAsync(cancellationToken);
     }
 
-    public virtual async Task<bool> SaveRangeAsync(IEnumerable<TEntity> items, CancellationToken cancellationToken = default)
+    public virtual async Task<int> AddRangeAsync(IReadOnlyCollection<TEntity> items, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(items);
 
-        var sw = new Stopwatch();
-        sw.Start();
-        string? resultChanges = null;
-        string? detailedResultChanges = null;
-
-        try
-        {
-            await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
-            {
-                var itemsToSave = new List<TEntity>();
-                foreach (var item in items)
-                {
-                    itemsToSave.Add(await AddItemToContextForSave(context, item, cancellationToken).ConfigureAwait(false));
-                }
-
-                if (context.ChangeTracker.HasChanges())
-                {
-                    resultChanges = context.ChangeTracker.ToDebugString(ChangeTrackerDebugStringOptions.ShortDefault);
-                    detailedResultChanges = context.ChangeTracker.ToDebugString(ChangeTrackerDebugStringOptions.LongDefault);
-
-                    var changes = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-                    var itemsList = items.ToList();
-                    for (int i = 0; i < itemsToSave.Count; i++)
-                    {
-                        itemsList[i].Id = itemsToSave[i].Id;
-                    }
-
-                    return changes == itemsList.Count;
-                }
-            }
-
-            return false;
-        }
-        finally
-        {
-            sw.Stop();
-            LogSave("Repository.SaveRangeAsync [Elapsed: {Elapsed}].\n\tChanges: {changes}", sw.Elapsed, resultChanges, detailedResultChanges);
-        }
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        context.Set<TEntity>().AddRange(items);
+        return await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<TEntity> AddItemToContextForSave(TContext context, TEntity item, CancellationToken cancellationToken)
-    {
-        var itemToSave = item.GetItemForSave.Invoke();
-
-        if (itemToSave is null)
-            throw new InvalidOperationException("Item for save can not be null!");
-
-        var existingItem = !itemToSave.Id.Equals(default(TId))
-            ? await context.Set<TEntity>().FirstOrDefaultAsync(i => i.Id.Equals(itemToSave.Id), cancellationToken).ConfigureAwait(false)
-            : null;
-
-        if (existingItem != null)
-        {
-            // Make changes directly in the itemToSave
-            itemToSave = itemToSave.GetItemForUpdate(existingItem);
-
-            // Make changes in child repository
-            BeforeUpdateItem?.Invoke(itemToSave, existingItem);
-
-            if (!itemToSave.Equals(existingItem))
-            {
-                context.Entry(existingItem).State = EntityState.Detached;
-                context.Entry(itemToSave).State = EntityState.Modified;
-                context.Set<TEntity>().Update(itemToSave);
-            }
-        }
-        else
-        {
-            context.Set<TEntity>().Add(itemToSave);
-        }
-
-        return itemToSave;
-    }
-
-    public virtual async Task<bool> DeleteAsync(TEntity item, CancellationToken cancellationToken = default)
+    public virtual async Task<int> DeleteAsync(TEntity item, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        var sw = new Stopwatch();
-        sw.Start();
-        string? resultChanges = null;
-
-        try
-        {
-            await using (var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
-            {
-                var existingItem = await context.Set<TEntity>().FirstOrDefaultAsync(i => i.Id.Equals(item.Id), cancellationToken).ConfigureAwait(false);
-                if (existingItem != null)
-                {
-                    context.Set<TEntity>().Remove(existingItem);
-                    resultChanges = context.ChangeTracker.ToDebugString(ChangeTrackerDebugStringOptions.LongDefault);
-
-                    return await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false) == 1;
-                }
-            }
-
-            return false;
-        }
-        finally
-        {
-            sw.Stop();
-            LogDelete("Repository.DeleteAsync [Elapsed: {Elapsed}].\n\tChanges: {changes}", sw.Elapsed, resultChanges);
-        }
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        context.Set<TEntity>().Remove(item);
+        return await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public virtual async Task<bool> DeleteRangeAsync(IEnumerable<TEntity> items, CancellationToken cancellationToken = default)
+    public virtual async Task<int> DeleteRangeAsync(IReadOnlyCollection<TEntity> items, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(items);
 
-        var sw = new Stopwatch();
-        sw.Start();
-        string? resultChanges = null;
-
-        try
-        {
-            await using (var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false))
-            {
-                var ids = items.Select(i => i.Id).ToList();
-                var existingItems = await context.Set<TEntity>().Where(i => ids.Contains(i.Id)).ToListAsync(cancellationToken);
-                if (existingItems?.Any() == true && existingItems.Count == items.Count())
-                {
-                    context.Set<TEntity>().RemoveRange(existingItems);
-                    resultChanges = context.ChangeTracker.ToDebugString(ChangeTrackerDebugStringOptions.LongDefault);
-
-                    return await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false) == existingItems.Count;
-                }
-            }
-
-            return false;
-        }
-        finally
-        {
-            sw.Stop();
-            LogDelete("Repository.DeleteRangeAsync [Elapsed: {Elapsed}].\n\tChanges: {changes}", sw.Elapsed, resultChanges);
-        }
-    }
-
-    protected void LogFind(string message, TimeSpan elapsed, string? sql)
-    {
-        if (elapsed > _criticalQueryExecutionTime)
-            _logger?.LogWarning(message, elapsed, sql);
-        else
-            _logger?.LogDebug(message, elapsed, sql);
-    }
-
-    private void LogSave(string message, TimeSpan elapsed, string? changes, string? detailedChanges)
-    {
-        if (elapsed > _criticalQueryExecutionTime)
-            _logger?.LogWarning(message, elapsed, detailedChanges);
-        else if (_logger?.IsEnabled(LogLevel.Trace) != true)
-            _logger?.LogDebug(message, elapsed, changes);
-        else
-            _logger?.LogTrace(message, elapsed, detailedChanges);
-    }
-
-    private void LogDelete(string message, TimeSpan elapsed, string? changes)
-    {
-        LogFind(message, elapsed, changes);
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        context.Set<TEntity>().RemoveRange(items);
+        return await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }
