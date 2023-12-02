@@ -19,12 +19,12 @@ public class MessagesRepository<TContext> : CommonRepository<TContext, Message>,
     {
     }
 
-    public async Task<IReadOnlyList<Message>> FindByRawDatesAsync(int rawChatId, DateTimeRange dateTimeRange, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Message>> FindByRawDatesAsync(long rawChatId, DateTimeRange rawDateTimeRange, CancellationToken cancellationToken)
     {
         var chatIdPath = QueryFactory.RawDataStructure.Message.ChatId;
         var datePath = QueryFactory.RawDataStructure.Message.Date;
-        var startDate = dateTimeRange.Start.ToJsonDate();
-        var endDate = dateTimeRange.End.ToJsonDate();
+        var startDate = rawDateTimeRange.Start.ToJsonDate();
+        var endDate = rawDateTimeRange.End.ToJsonDate();
 
         var condition = RawData.Eq(chatIdPath, rawChatId)
             .And(RawData.Gte(datePath, startDate))
@@ -35,7 +35,7 @@ public class MessagesRepository<TContext> : CommonRepository<TContext, Message>,
         return messages;
     }
 
-    public async Task<Message?> FindByRawIdAsync(int rawMessageId, long rawChatId, CancellationToken cancellationToken)
+    public async Task<Message?> FindByRawIdAsync(long rawMessageId, long rawChatId, CancellationToken cancellationToken)
     {
         var messageIdPath = QueryFactory.RawDataStructure.Message.Id;
         var chatIdPath = QueryFactory.RawDataStructure.Message.ChatId;
@@ -47,21 +47,21 @@ public class MessagesRepository<TContext> : CommonRepository<TContext, Message>,
         return messages.SingleOrDefault();
     }
 
-    public async Task<IReadOnlyList<Message>> FindDialogWithBotAsync(int rawChatId, int rawUserId, string botName, DateTimeRange dateTimeRange, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Message>> FindDialogWithBotAsync(long rawChatId, long rawUserId, string botName, DateTimeRange rawDateTimeRange, CancellationToken cancellationToken)
     {
         var chatIdPath = QueryFactory.RawDataStructure.Message.ChatId;
         var datePath = QueryFactory.RawDataStructure.Message.Date;
-        var startDate = dateTimeRange.Start.ToJsonDate();
-        var endDate = dateTimeRange.End.ToJsonDate();
+        var startDate = rawDateTimeRange.Start.ToJsonDate();
+        var endDate = rawDateTimeRange.End.ToJsonDate();
 
         throw new NotImplementedException();
     }
 
-    public async Task<IReadOnlyList<Message>> FindWithTextAsync(int rawChatId, string searchText, DateTimeRange dateTimeRange, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Message>> FindWithTextAsync(long rawChatId, string searchText, DateTimeRange rawDateTimeRange, CancellationToken cancellationToken)
     {
         var (_, textPath, chatIdPath, _, datePath) = QueryFactory.RawDataStructure.Message;
-        var startDate = dateTimeRange.Start.ToJsonDate();
-        var endDate = dateTimeRange.End.ToJsonDate();
+        var startDate = rawDateTimeRange.Start.ToJsonDate();
+        var endDate = rawDateTimeRange.End.ToJsonDate();
         var condition = RawData.Eq(chatIdPath, rawChatId)
                 .And(RawData.Gte(datePath, startDate))
                 .And(RawData.Lte(datePath, endDate))

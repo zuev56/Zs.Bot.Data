@@ -8,8 +8,8 @@ namespace Zs.Bot.Data.Repositories;
 
 public interface IMessagesRepository : IRepository<Message>
 {
-    Task<IReadOnlyList<Message>> FindByRawDatesAsync(int rawChatId, DateTimeRange dateTimeRange, CancellationToken cancellationToken = default);
-    Task<Message?> FindByRawIdAsync(int rawMessageId, long rawChatId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<Message>> FindDialogWithBotAsync(int rawChatId, int rawUserId, string botName, DateTimeRange dateTimeRange, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<Message>> FindWithTextAsync(int rawChatId, string searchText, DateTimeRange dateTimeRange, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Message>> FindByRawDatesAsync(long rawChatId, DateTimeRange rawDateTimeRange, CancellationToken cancellationToken = default);
+    Task<Message?> FindByRawIdAsync(long rawMessageId, long rawChatId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Message>> FindDialogWithBotAsync(long rawChatId, long rawUserId, string botName, DateTimeRange rawDateTimeRange, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Message>> FindWithTextAsync(long rawChatId, string searchText, DateTimeRange rawDateTimeRange, CancellationToken cancellationToken = default);
 }
