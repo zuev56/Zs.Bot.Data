@@ -43,7 +43,7 @@ public abstract class CommonRepository<TContext, TEntity> : IRepository<TEntity>
 
     private void LogTrace(ICondition condition, string sql, [CallerMemberName] string methodName = null)
     {
-        _logger.LogTraceIfNeed("Entity: {Entity}, Method: {Method}, Condition: {Condition}, SQL: {SQL}", typeof(TEntity).Name, methodName, condition.ToDebugString(), sql);
+        _logger.LogTraceIfNeed("Entity: {Entity}, Method: {Method}, Condition: {Condition}, SQL: {SQL}", typeof(TEntity).Name, methodName, condition, sql);
     }
 
     private async Task<string> GetTableNameAsync(CancellationToken cancellationToken)

@@ -14,6 +14,6 @@ public sealed class Column : ICondition
     public static Column Lt(string columnName, object value) => new() { ColumnName = columnName, Value = value, Operator = ComparisonOperator.Lt };
     public static Column Lte(string columnName, object value) => new() { ColumnName = columnName, Value = value, Operator = ComparisonOperator.Lte };
 
-    public string ToDebugString()
+    public override string ToString()
         => $"{ColumnName} {Operator} {Value}";
 }

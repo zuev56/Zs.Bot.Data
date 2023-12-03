@@ -33,6 +33,6 @@ public class RawData : ICondition
     public static RawData DoesNotStartWith(string path, object value) => new(path, value, ComparisonOperator.DoesNotStartWith);
     public static RawData DoesNotEndWith(string path, object value) => new(path, value, ComparisonOperator.DoesNotEndWith);
 
-    public string ToDebugString()
+    public override string ToString()
         => $"{Path} {Operator} {Value}";
 }

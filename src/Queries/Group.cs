@@ -6,6 +6,6 @@ public sealed class Group : ICondition
     public ICondition Condition2 { get; set; } = null!;
     public LogicalOperator Operator { get; set; }
 
-    public string ToDebugString()
+    public override string ToString()
         => $"({Condition1}) {Operator} ({Condition2})";
 }
