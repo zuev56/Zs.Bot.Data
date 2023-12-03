@@ -13,4 +13,7 @@ public sealed class Column : ICondition
     public static Column Gte(string columnName, object value) => new() { ColumnName = columnName, Value = value, Operator = ComparisonOperator.Gte };
     public static Column Lt(string columnName, object value) => new() { ColumnName = columnName, Value = value, Operator = ComparisonOperator.Lt };
     public static Column Lte(string columnName, object value) => new() { ColumnName = columnName, Value = value, Operator = ComparisonOperator.Lte };
+
+    public string ToDebugString()
+        => $"{ColumnName} {Operator} {Value}";
 }

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Zs.Bot.Data.Models;
 using Zs.Bot.Data.Queries;
 
@@ -11,8 +12,8 @@ namespace Zs.Bot.Data.Repositories;
 public class UsersRepository<TContext> : CommonRepository<TContext, User>, IUsersRepository
     where TContext : DbContext
 {
-    public UsersRepository(IDbContextFactory<TContext> contextFactory, IQueryFactory queryFactory)
-        : base(contextFactory, queryFactory)
+    public UsersRepository(IDbContextFactory<TContext> contextFactory, IQueryFactory queryFactory, ILogger<UsersRepository<TContext>> logger)
+        : base(contextFactory, queryFactory, logger)
     {
     }
 

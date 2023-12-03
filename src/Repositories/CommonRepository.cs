@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Zs.Bot.Data.Models;
 using Zs.Bot.Data.Queries;
+using Zs.Common.Extensions;
 
 namespace Zs.Bot.Data.Repositories;
 
@@ -14,24 +17,33 @@ public abstract class CommonRepository<TContext, TEntity> : IRepository<TEntity>
     where TEntity : DbEntity
     where TContext : DbContext
 {
+    private readonly ILogger<CommonRepository<TContext, TEntity>> _logger;
     protected IQueryFactory QueryFactory { get; }
     protected IDbContextFactory<TContext> ContextFactory { get; }
 
     protected CommonRepository(
         IDbContextFactory<TContext> contextFactory,
-        IQueryFactory queryFactory)
+        IQueryFactory queryFactory,
+        ILogger<CommonRepository<TContext, TEntity>> logger)
     {
         ContextFactory = contextFactory;
         QueryFactory = queryFactory;
+        _logger = logger;
     }
 
     protected async Task<IReadOnlyList<TEntity>> FindByRawDataConditionAsync(ICondition condition, CancellationToken cancellationToken)
     {
         var tableName = await GetTableNameAsync(cancellationToken).ConfigureAwait(false);
         var findByRawDataIdSql = QueryFactory.CreateFindByConditionQuery(tableName, condition);
-        var entities = await FindAllBySqlAsync(findByRawDataIdSql, cancellationToken).ConfigureAwait(false);
 
-        return entities;
+        LogTrace(condition, findByRawDataIdSql);
+
+        return await FindAllBySqlAsync(findByRawDataIdSql, cancellationToken).ConfigureAwait(false);
+    }
+
+    private void LogTrace(ICondition condition, string sql, [CallerMemberName] string methodName = null)
+    {
+        _logger.LogTraceIfNeed("Entity: {Entity}, Method: {Method}, Condition: {Condition}, SQL: {SQL}", typeof(TEntity).Name, methodName, condition.ToDebugString(), sql);
     }
 
     private async Task<string> GetTableNameAsync(CancellationToken cancellationToken)

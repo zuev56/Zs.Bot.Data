@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Zs.Bot.Data.Extensions;
 using Zs.Bot.Data.Models;
 using Zs.Bot.Data.Queries;
@@ -14,8 +15,8 @@ namespace Zs.Bot.Data.Repositories;
 public class MessagesRepository<TContext> : CommonRepository<TContext, Message>, IMessagesRepository
     where TContext : DbContext
 {
-    public MessagesRepository(IDbContextFactory<TContext> contextFactory, IQueryFactory queryFactory)
-        : base(contextFactory, queryFactory)
+    public MessagesRepository(IDbContextFactory<TContext> contextFactory, IQueryFactory queryFactory, ILogger<MessagesRepository<TContext>> logger)
+        : base(contextFactory, queryFactory, logger)
     {
     }
 

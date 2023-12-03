@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoFixture;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Zs.Bot.Data.Repositories;
 using Zs.Bot.Data.Queries;
@@ -17,7 +18,7 @@ public sealed class CommonRepositoryTests : TestBase
     private sealed class TestRepository<TContext> : CommonRepository<TContext, TestDbEntity> where TContext : DbContext
     {
         public TestRepository(IDbContextFactory<TContext> contextFactory, IQueryFactory queryFactory)
-            : base(contextFactory, queryFactory)
+            : base(contextFactory, queryFactory, new NullLogger<TestRepository<TContext>>())
         {
         }
     }
@@ -172,7 +173,7 @@ public sealed class CommonRepositoryTests : TestBase
     [Fact]
     public async Task FindAllAsync_ItemsByPredicateDoNotExist_ReturnsEmptyList()
     {
-        var contextFactory = CreateBotContextFactory();
+        CreateBotContextFactory();
         var commonRepository = Fixture.Create<TestRepository<TestBotContext>>();
         Expression<Func<TestDbEntity, bool>> predicate = i => i.Id > 0;
 
